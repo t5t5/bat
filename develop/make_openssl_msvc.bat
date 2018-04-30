@@ -1,28 +1,48 @@
 @echo off
 setlocal enabledelayedexpansion
 
-set OPENSSL_NAME=openssl_102_20180428
+:: Сборка OpenSSL
+::
+:: %%1  - путь к каталогу openssl, если пусто берется текущий каталог
+::        каталог должен содержать поддериктоию src
+::        сборка будет прходить в src установка в bin
 
-set PATH=C:\Progs\bat;%PATH%
+if "%1" == "" (
+    set CURRENTDIR=%CD%
+) else (
+    set CURRENTDIR=%~f1
+)
+
+if not exist "%CURRENTDIR%\src\" (
+   echo Directory 'src' don't exists in path [%CURRENTDIR%].
+   exit 0
+)
+
+call :get_last_part %CURRENTDIR%
 
 :: формат даты вида: yyyy-mm-dd
 set CURDATE=%DATE:~6,4%-%DATE:~3,2%-%DATE:~0,2%
 set CURTIME=%TIME: =0%
 
-call _sub develop\set_msvc.bat x86
-call _sub develop\set_perl.bat
-call _sub develop\set_log.bat "%~dp0%OPENSSL_NAME%\%CURDATE%-log.txt"
+call "%~dp0set_msvc.bat" x86
+call "%~dp0set_perl.bat"
+call "%~dp0set_log.bat" "%CURRENTDIR%\%CURDATE%-log.txt"
 
-set OPENSSL_INSTALL_DIR=%~dp0%OPENSSL_NAME%
-set OPENSSL_SRC_DIR=%~dp0%OPENSSL_NAME%\src
-set OPENSSL_LOG_DIR=%~dp0%OPENSSL_NAME%
-set STEP_FILE=%~dp0%OPENSSL_NAME%\make_step.bat
+set OPENSSL_INSTALL_DIR=%CURRENTDIR%
+set OPENSSL_SRC_DIR=%CURRENTDIR%\src
+set OPENSSL_LOG_DIR=%CURRENTDIR%
+set STEP_FILE=%CURRENTDIR%\make_step.bat
 
 :: ------------------------------------------------------------------------------------------------
 ::Build
 goto start_build
-exit 0
+
 :: ------------------------------------------------------------------------------------------------
+:get_last_part
+:: %%1  - путь к исходникам OpenSSL
+set OPENSSL_NAME=%~n1
+exit /b 0
+
 :ossl_make_install_dir
 if not exist "%OPENSSL_INSTALL_DIR%" (
     %log% " [%OPENSSL_INSTALL_DIR%] not found. Try create..."
