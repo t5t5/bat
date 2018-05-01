@@ -153,6 +153,21 @@ if exist "%~1" (
 )
 exit /b 0
 
+:create_inc_lib_file
+setlocal
+set SET_INC_LIB_FILE=%~dp0set_openssl_inc_lib.bat
+set SET_INC_LIB_FILE_BAK=%~dp0set_openssl_inc_lib.bak
+
+if exist "%SET_INC_LIB_FILE%" (
+    move /Y "%SET_INC_LIB_FILE%" "%SET_INC_LIB_FILE_BAK%"
+)
+
+echo :: auto genarated by %~nx0 at %CURDATE% %CURTIME%>"%SET_INC_LIB_FILE%"
+echo set INCLUDE=%%INCLUDE%%;%OPENSSL_INSTALL_DIR%\include>>"%SET_INC_LIB_FILE%"
+echo set LIB=%%LIB%%;%OPENSSL_INSTALL_DIR%\lib>>"%SET_INC_LIB_FILE%"
+endlocal
+exit /b 0
+
 :: ------------------------------------------------------------------------------------------------
 :start_build
 call :load_steps %STEP_FILE%
@@ -226,6 +241,8 @@ if %STEP_INSTALL% == 1 (
 )
 set STEP_INSTALL=0
 call :save_steps "%STEP_FILE%"
+
+call :create_inc_lib_file
 
 call :end_log_ok
 exit /b 0
