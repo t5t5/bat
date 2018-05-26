@@ -1,22 +1,25 @@
 @echo off
-:: call helper для вызова bat из подкаталогов. Максимально 8 аргументов.
+:: call helper для вызова bat из подкаталогов.
 :: %%1  - bat
+:: %%2... аргументы для %%1
 
 if "%1" == "" (
     echo Error. Bat not specified.
     exit 1
 )
 
-setlocal
+set FILE_BAT=%~dp0%~1
 
-set COUNT=0
-for %%a in (%*) do set /a COUNT+=1
-if %COUNT% gtr 9 (
-    echo Error: Max 9 arguments.
-    exit 1
+shift
+
+:: %%1 - point to parameters
+set ARGS=
+:do_tasks_args
+if not "%~1" == "" (
+   set ARGS=%ARGS% %1
+   shift
+   goto :do_tasks_args
 )
 
-call "%~dp0%~1" %2 %3 %4 %5 %6 %7 %8 %9
+call "%FILE_BAT%"%ARGS%
 exit /b %ERRORLEVEL%
-
-endlocal
