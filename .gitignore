@@ -4,6 +4,9 @@ Thumbs.db
 ehthumbs.db
 ehthumbs_vista.db
 
+# vim swap
+*.swp
+
 *.txt
 *.bak
 test.bat
