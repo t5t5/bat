@@ -1,6 +1,7 @@
 @echo off
 
 call "%~dp0tools\set_7z.bat"
+call "%~dp0tools\gen_temp_file_name.bat" TEMP_FILE_LIST
 
 if "%~1" == "" (
     call :usage
@@ -110,7 +111,6 @@ if "%~1" == "" (
     echo Error. File not defined.
     exit 1
 )
-call "%~dp0tools\gen_temp_file_name.bat" TEMP_FILE_LIST
 :do_arc_files_list
 if not "%~1" == "" (
     echo %1>>%TEMP_FILE_LIST%
