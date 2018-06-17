@@ -239,7 +239,7 @@ goto :wait4ready
 
 :usage
 :: Показать информацию по использованию
-echo Usage: %~nx0 command arg [--threads N] [--taskid^|-id] file_bat [parameters]
+echo Usage: %~nx0 command [arg] [--threads N] [--taskid^|-id] file_bat [parameters]
 echo Commands:
 echo   help             - usage inforamtion
 echo   tasks N          - start N tasks (N ^>= 1)
@@ -248,6 +248,6 @@ echo   dirs "mask"      - process directories "mask"
 echo Options:
 echo   --threads N      - number threads N
 echo   --taskid or --id - first parameter for file_bat will be task id (1..N)
-echo Parametesr:
+echo Parameters:
 echo   parameters       - parameters for file_bat (maximum 9)
 exit 0
