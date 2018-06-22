@@ -7,6 +7,15 @@
 call :check_path_file "ruby.exe"
 if "%ERRORLEVEL%" == "0" (
     exit /b 0
+) else if exist "C:\Ruby26-x64\bin\ruby.exe" (
+    call :set_path "C:\Ruby26-x64\bin"
+    exit /b 0
+) else if exist "C:\Ruby25-x64\bin\ruby.exe" (
+    call :set_path "C:\Ruby25-x64\bin"
+    exit /b 0
+) else if exist "C:\Ruby24-x64\bin\ruby.exe" (
+    call :set_path "C:\Ruby24-x64\bin"
+    exit /b 0
 ) else if exist "C:\Ruby23-x64\bin\ruby.exe" (
     call :set_path "C:\Ruby23-x64\bin"
     exit /b 0
