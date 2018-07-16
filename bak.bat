@@ -96,15 +96,17 @@ exit /b 0
 
 :: ---------------------------------------------------------
 :do_arc_file
+:: %%1 - Имя файла для архивации
 ::echo OUT_FILE:  %OUT_FILE%
 ::echo FORMAT:    %FORMAT%
 ::echo EXTENSION: %EXTENSION%
 call :get_out_file_name %1
-call 7z.bat --format %FORMAT% --out %OUT_FILE% %1
+call 7z.bat --format %FORMAT% --out "%OUT_FILE%" %1
 exit /b %ERRORLEVEL%
 
 :: ---------------------------
 :do_arc_files
+:: %%1 - Указывает на имя первого файла для архивации
 if "%OUT_FILE%" == "" (
     echo Error. Option --out is required.
     exit 1
@@ -121,11 +123,12 @@ if not "%~1" == "" (
 	shift
 	goto :do_arc_files_list
 )
-call 7z.bat --files --format %FORMAT% --out %OUT_FILE%%FILES%
+call 7z.bat --files --format %FORMAT% --out "%OUT_FILE%"%FILES%
 exit /b %ERRORLEVEL%
 
 :: ---------------------------
 :do_arc_list
+:: %%1 - Имя файла списка
 if "%OUT_FILE%" == "" (
     echo Error. Option --out is required.
     exit 1
@@ -134,7 +137,7 @@ if "%OUT_FILE%" == "" (
 ::echo FORMAT:    %FORMAT%
 ::echo EXTENSION: %EXTENSION%
 call :get_out_file_name_suffix "%OUT_FILE%" %EXTENSION%
-call 7z.bat --list --format %FORMAT% --out %OUT_FILE% %1
+call 7z.bat --list --format %FORMAT% --out "%OUT_FILE%" %1
 exit /b %ERRORLEVEL%
 
 :usage
