@@ -14,7 +14,7 @@ if "%~1" == "" (
     exit 0
 )
 
-call 7zz.bat --format zip %*
+call 7z.bat --format zip %*
 exit /b 0
 
 :usage
