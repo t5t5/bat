@@ -1,42 +1,58 @@
 @echo off
-:: Поиск python в стандартных для него путях.
+:: Поиск python.
 ::
-:: Если python будет найден, будут установленны соответствующие переменные среды.
+:: Если python будет найден, будет настроена переменная среды Path.
 :: Если python не будет найден, вывод соответсвующей информации и выход из cmd.
+::
+:: Note: Пути к python.exe должны быть прописаны в %~n0.paths.
 
-call :check_path_file "python.exe"
+setlocal EnableDelayedExpansion
+set APP=python.exe
+
+call :check_in_path "%APP%"
 if "%ERRORLEVEL%" == "0" (
     exit /b 0
-) else if exist "C:\Python37\python.exe" (
-    call :set_path "C:\Python37\Scripts" "C:\Python37"
-    exit /b 0
-) else if exist "C:\Python36\python.exe" (
-    call :set_path "C:\Python36\Scripts" "C:\Python36"
-    exit /b 0
-) else if exist "C:\Python35\python.exe" (
-    call :set_path "C:\Python35\Scripts" "C:\Python35"
-    exit /b 0
-) else (
-    echo Error: Python not found!
-    exit 1
 )
 
-:check_path_file
+set P=
+for /f "eol=# tokens=*" %%a in (%~dpn0.paths) do (
+    call :check_path "%%a" "%APP%"
+    if !ERRORLEVEL! == 0 ( goto :end )
+)
+echo Error: Python not found. [%~f0]
+echo        Append python path to file: [%~dpn0.paths]
+exit 1
+
+:check_path
+:: Проверка наличия файла по определенному пути.
+:: %%1 - Путь для проверки;
+:: %%2 - Имя файла для поиска.
+::
+:: Выход:
+:: ERRORLEVEL = 0 найден
+:: P          = путь
+::
+:: ERRORLEVEL = 1 не найден
+
+if exist "%~1\%~2" (
+    set P=%~1
+    exit /b 0
+)
+exit /b 1
+
+:check_in_path
 :: Поиск файла в стандартных путях PATH
 :: %%1  - файл
 :: 
 :: Выход:
-:: %%ERRORLEVEL%% = 0 найден
-:: %%ERRORLEVEL%% = 1 не найден
+:: ERRORLEVEL = 0 найден
+:: ERRORLEVEL = 1 не найден
 if not "%~$path:1" == "" (
     exit /b 0
-) else (
-    exit /b 1
 )
+exit /b 1
 
-:set_path
-:: Helper для set, из if не всегда срабатывает
-:: %%1  - path 1 to set
-:: %%2  - path 2 to set
-set PATH=%~1;%~2;%PATH%
+:end
+endlocal&set Path=%P%;%Path%
+
 exit /b 0
