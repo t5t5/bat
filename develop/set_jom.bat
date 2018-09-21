@@ -30,6 +30,8 @@ exit 1
 ::
 :: Выход:
 :: ERRORLEVEL = 0 найден
+:: P          = путь
+::
 :: ERRORLEVEL = 1 не найден
 
 if exist "%~1\%~2" (
@@ -41,7 +43,7 @@ exit /b 1
 :check_in_path
 :: Поиск файла в стандартных путях PATH
 :: %%1  - файл
-:: 
+::
 :: Выход:
 :: ERRORLEVEL = 0 найден
 :: ERRORLEVEL = 1 не найден
@@ -52,6 +54,6 @@ exit /b 1
 
 :end
 endlocal&set Path=%P%;%Path%
-set P=
+
 exit /b 0
 
