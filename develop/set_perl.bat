@@ -1,39 +1,59 @@
 @echo off
-:: Поиск перла в стандартных для него путях.
+:: Поиск перла.
 ::
-:: Если перл будет найден, будут установленны соответствующие переменные среды.
+:: Если перл будет найден, будет настроена переменная среды Path.
 :: Если перл не будет найден, вывод соответсвующей информации и выход из cmd.
+::
+:: Note: Пути к perl.exe должны быть прописаны в %~n0.paths.
 
-call :check_perl "perl.exe"
-if "%ERRORLEVEL%" == "0" (
+setlocal EnableDelayedExpansion
+set APP=perl.exe
+
+call :check_in_path "%APP%"
+if %ERRORLEVEL% == 0 (
     exit /b 0
-) else if exist "C:\Perl64\bin\perl.exe" (
-    call :set_path "C:\Perl64\bin" "C:\Perl64\site\bin"
-    exit /b 0
-) else if exist "C:\Perl\bin\perl.exe" (
-    call :set_path "C:\Perl\bin" "C:\Perl\site\bin"
-    exit /b 0
-) else (
-    echo Error: Perl not found!
-    exit 1
 )
 
-:check_perl
-:: Поиск перла в стандартных путях PATH
-:: %%1  - perl.exe
+set P=
+for /f "eol=# delims=; tokens=1,*" %%a in (%~dpn0.paths) do (
+    echo ---%%a---%%b---
+    call :check_path "%%a" "%%b" "%APP%"
+    if !ERRORLEVEL! == 0 ( goto :end )
+)
+echo Error: Perl not found. [%~f0]
+echo        Append perl path to file [%~dpn0.paths]
+exit 1
+
+:check_path
+:: Проверка наличия файла по определенному пути.
+:: %%1 - Путь для проверки;
+:: %%2 - Путь для установки;
+:: %%3 - Имя файла для поиска.
+::
+:: Выход:
+:: ERRORLEVEL = 0 найден
+:: P          = пути
+::
+:: ERRORLEVEL = 1 не найден
+if exist "%~1\%~3" (
+    set P=%~1;%~2
+    exit /b 0
+)
+exit /b 1
+
+:check_in_path
+:: Поиск файла в стандартных путях PATH
+:: %%1  - файл
 :: 
 :: Выход:
-:: %%ERRORLEVEL%% = 0 найден
-:: %%ERRORLEVEL%% = 1 не найден
+:: ERRORLEVEL = 0 найден
+:: ERRORLEVEL = 1 не найден
 if not "%~$path:1" == "" (
     exit /b 0
-) else (
-    exit /b 1
 )
+exit /b 1
 
-:set_path
-:: Helper для set, из if не всегда срабатывает
-:: %%1  - path to perl\bin
-:: %%2  - path to perl\site\bin
-set PATH=%~1;%~2;%PATH%
+:end
+endlocal&set Path=%P%;%Path%
+
 exit /b 0
