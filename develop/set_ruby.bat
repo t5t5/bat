@@ -1,44 +1,59 @@
 @echo off
-:: Поиск ruby в стандартных для него путях.
+:: Поиск ruby.
 ::
-:: Если ruby будет найден, будут установленны соответствующие переменные среды.
+:: Если ruby будет найден, будет настроена переменная среды Path.
 :: Если ruby не будет найден, вывод соответсвующей информации и выход из cmd.
+::
+:: Note: Пути к ruby.exe должны быть прописаны в %~n0.paths.
 
-call :check_path_file "ruby.exe"
+setlocal EnableDelayedExpansion
+set APP=ruby.exe
+
+call :check_in_path "%APP%"
 if "%ERRORLEVEL%" == "0" (
     exit /b 0
-) else if exist "C:\Ruby26-x64\bin\ruby.exe" (
-    call :set_path "C:\Ruby26-x64\bin"
-    exit /b 0
-) else if exist "C:\Ruby25-x64\bin\ruby.exe" (
-    call :set_path "C:\Ruby25-x64\bin"
-    exit /b 0
-) else if exist "C:\Ruby24-x64\bin\ruby.exe" (
-    call :set_path "C:\Ruby24-x64\bin"
-    exit /b 0
-) else if exist "C:\Ruby23-x64\bin\ruby.exe" (
-    call :set_path "C:\Ruby23-x64\bin"
-    exit /b 0
-) else (
-    echo Error: Ruby not found!
-    exit 1
 )
 
-:check_path_file
+set P=
+for /f "eol=# tokens=*" %%a in (%~dpn0.paths) do (
+    call :check_path "%%a" "%APP%"
+    if !ERRORLEVEL! == 0 ( goto :end )
+)
+echo Error: Ruby not found. [%~f0]
+echo        Append ruby path to file: [%~dpn0.paths]
+exit 1
+
+:check_path
+:: Проверка наличия файла по определенному пути.
+:: %%1 - Путь для проверки;
+:: %%2 - Имя файла для поиска.
+::
+:: Выход:
+:: ERRORLEVEL = 0 найден
+:: P          = путь
+::
+:: ERRORLEVEL = 1 не найден
+
+if exist "%~1\%~2" (
+    set P=%~1
+    exit /b 0
+)
+exit /b 1
+
+:check_in_path
 :: Поиск файла в стандартных путях PATH
 :: %%1  - файл
-:: 
+::
 :: Выход:
-:: %%ERRORLEVEL%% = 0 найден
-:: %%ERRORLEVEL%% = 1 не найден
+:: ERRORLEVEL = 0 найден
+:: ERRORLEVEL = 1 не найден
 if not "%~$path:1" == "" (
     exit /b 0
-) else (
-    exit /b 1
 )
+exit /b 1
 
-:set_path
-:: Helper для set, из if не всегда срабатывает
-:: %%1  - path to set
-set PATH=%~1;%PATH%
+:end
+endlocal&set Path=%P%;%Path%
+
 exit /b 0
+
