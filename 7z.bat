@@ -145,11 +145,11 @@ goto :do_arc_common_%FORMAT%
 exit /b 0
 
 :do_arc_common_ppmd
-7zG.exe a -t7z "%OUT_FILE%" "%IN_FILE%" -m0=PPMd -mx=9 -mmem=512m
+7zG.exe a -t7z "%OUT_FILE%" %IN_FILE% -m0=PPMd -mx=9 -mmem=512m
 exit /b 0
 
 :do_arc_common_zip
-7zG.exe a -tzip "%OUT_FILE%" "%IN_FILE%" -mx=9
+7zG.exe a -tzip "%OUT_FILE%" %IN_FILE% -mx=9
 exit /b 0
 
 :usage
