@@ -1,0 +1,13 @@
+#
+#Команды для сборки OpenSSL 1.1.x (32 бита)
+#
+#%%a                  %%b                    %%c                                                                                           %%d               %%e %%f
+ Copy files...       ; End copy files       ;xcopy %OPENSSL_BASE_DIR%\src %OPENSSL_SRC_DIR% /I /E                                         ;STEP_0_COPY      ;w  ;%OPENSSL_LOG_DIR%\0-copy_files.txt
+ Test source dir...  ; End test source dir  ;call :check_src_dir                                                                          ;-                ;a  ;nul
+ Make install dir... ; End make install dir ;call :make_install_dir                                                                       ;-                ;a  ;nul
+ Configure...        ; End configure        ;perl Configure VC-WIN32 no-asm --prefix=%OPENSSL_INSTALL_DIR% --openssldir=%OPENSSL_SSL_DIR% ;STEP_1_CONFIGURE ;w  ;%OPENSSL_LOG_DIR%\1-configure.txt
+ Assign numbers...   ; End assign numbers   ;perl util\mkdef.pl crypto ssl update                                                         ;STEP_2_ASSIGN    ;w  ;%OPENSSL_LOG_DIR%\2-assign.txt
+ Compile...          ; End compile          ;nmake                                                                                        ;STEP_4_COMPILE   ;a  ;%OPENSSL_LOG_DIR%\4-compile.txt
+ Test...             ; End test             ;nmake test                                                                                   ;STEP_5_TEST      ;w  ;%OPENSSL_LOG_DIR%\5-test.txt
+ Install...          ; End install          ;nmake install                                                                                ;STEP_6_INSTALL   ;w  ;%OPENSSL_LOG_DIR%\6-install.txt
+ Create include...   ; End create include   ;call :create_inc_lib_file                                                                    ;-                ;a  ;nul

@@ -1,0 +1,14 @@
+#
+#Команды для сборки OpenSSL 1.0.x (64 бита)
+#
+#%%a                  %%b                    %%c                                                                                  %%d               %%e %%f
+ Copy files...       ; End copy files       ;xcopy %OPENSSL_BASE_DIR%\src %OPENSSL_SRC_DIR% /I /E                                ;STEP_0_COPY      ;w  ;%OPENSSL_LOG_DIR%\0-copy_files.txt
+ Test source dir...  ; End test source dir  ;call :check_src_dir                                                                 ;-                ;a  ;nul
+ Make install dir... ; End make install dir ;call :make_install_dir                                                              ;-                ;a  ;nul
+ Configure...        ; End configure        ;perl Configure VC-WIN64A no-asm --prefix=%OPENSSL_INSTALL_DIR% enable-static-engine ;STEP_1_CONFIGURE ;w  ;%OPENSSL_LOG_DIR%\1-configure.txt
+ Assign numbers...   ; End assign numbers   ;perl util\mkdef.pl crypto ssl update                                                ;STEP_2_ASSIGN    ;w  ;%OPENSSL_LOG_DIR%\2-assign.txt
+ Prepare...          ; End prepare          ;call ms\do_win64a                                                                   ;STEP_3_PREPARE   ;w  ;%OPENSSL_LOG_DIR%\3-prepare.txt
+ Compile...          ; End compile          ;nmake -f ms\ntdll.mak                                                               ;STEP_4_COMPILE   ;a  ;%OPENSSL_LOG_DIR%\4-compile.txt
+ Test...             ; End test             ;nmake -f ms\ntdll.mak test                                                          ;STEP_5_TEST      ;w  ;%OPENSSL_LOG_DIR%\5-test.txt
+ Install...          ; End install          ;nmake -f ms\ntdll.mak install                                                       ;STEP_6_INSTALL   ;w  ;%OPENSSL_LOG_DIR%\6-install.txt
+ Create include...   ; End create include   ;call :create_inc_lib_file                                                           ;-                ;a  ;nul

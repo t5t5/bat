@@ -34,8 +34,12 @@ shift /1
 goto :parse_arguments
 
 :begin
+set PATTERN_VERSION=_1[0-1][0-9]_
+set PATTERN_10x=_10[0-9]_
+set PATTERN_11x=_11[0-9]_
 call :check_platform
 call :check_base_dir
+call :get_openssl_version %OPENSSL_BASE_DIR%
 call :get_openssl_name %OPENSSL_BASE_DIR%
 
 :: x32 or x64
@@ -51,16 +55,35 @@ set CURTIME=%TIME: =0%
 
 call "%~dp0set_msvc.bat" %PLATFORM%
 call "%~dp0set_perl.bat"
+call "%~dp0set_jom.bat"
 call "%~dp0set_log.bat" "%OPENSSL_BASE_DIR%\%CURDATE%-log.txt"
 
 set OPENSSL_INSTALL_DIR=%OPENSSL_BASE_DIR%\%PLATFORM_NAME%\bin
+set OPENSSL_SSL_DIR=%OPENSSL_INSTALL_DIR%\ssl
 set OPENSSL_SRC_DIR=%OPENSSL_BASE_DIR%\%PLATFORM_NAME%\src
 set OPENSSL_LOG_DIR=%OPENSSL_BASE_DIR%\%PLATFORM_NAME%
 set OPENSSL_STEP_FILE=%OPENSSL_BASE_DIR%\%PLATFORM_NAME%\make_step.txt
+set OPENSSL_STEPS=%~dpn0_%VERSION%_%PLATFORM_NAME%.steps
+
+if not exist "%OPENSSL_STEPS%" (
+    echo Error. Can't find steps file. [%OPENSSL_STEPS%]
+    exit 1
+)
 
 call :load_steps %OPENSSL_STEP_FILE%
 call :begin_log
-call :main_%PLATFORM_NAME%
+
+for /F "eol=# tokens=1,2,3,4,5,6 delims=;" %%a in (%OPENSSL_STEPS%) do (
+    call _sub.bat tools\trim_right.bat __A "%%a"
+    call _sub.bat tools\trim_right.bat __B "%%b"
+    call _sub.bat tools\trim_right.bat __C "%%c"
+    call _sub.bat tools\trim_right.bat __D "%%d"
+    call _sub.bat tools\trim_right.bat __E "%%e"
+    call _sub.bat tools\trim_right.bat __F "%%f"
+    call :main_step "!__A!" "!__B!" "!__C!" "!__D!" "!__E!" "!__F!"
+    if not !ERRORLEVEL! == 0 ( goto :end )
+)
+:end
 if %ERRORLEVEL% == 0 (
     call :end_log_ok
 ) else (
@@ -69,59 +92,6 @@ if %ERRORLEVEL% == 0 (
 exit /b 0
 
 :: ------------------------------------------------------------------------------------------------
-
-:main_x32
-::%%a                   %%b                     %%c                                                                                        %%d              %%e  %%f
-for %%a in (
-" Copy files...;       ; End copy files;       ;xcopy %%%%OPENSSL_BASE_DIR%%%%\src %%%%OPENSSL_SRC_DIR%%%% /I /E;                         ;STEP_0_COPY;      ;w;  ;%%%%OPENSSL_LOG_DIR%%%%\0-copy_files.txt"
-" Test source dir...;  ; End test source dir;  ;call :check_src_dir;                                                                      ;-;                ;a;  ;nul"
-" Make install dir...; ; End make install dir; ;call :make_install_dir;                                                                   ;-;                ;a;  ;nul"
-" Configure...;        ; End configure;        ;perl Configure VC-WIN32 no-asm --prefix=%%%%OPENSSL_INSTALL_DIR%%%% enable-static-engine; ;STEP_1_CONFIGURE; ;w;  ;%%%%OPENSSL_LOG_DIR%%%%\1-configure.txt"
-" Assign numbers...;   ; End assign numbers;   ;perl util\mkdef.pl crypto ssl update;                                                     ;STEP_2_ASSIGN;    ;w;  ;%%%%OPENSSL_LOG_DIR%%%%\2-assign.txt"
-" Prepare...;          ; End prepare;          ;call ms\do_ms;                                                                            ;STEP_3_PREPARE;   ;w;  ;%%%%OPENSSL_LOG_DIR%%%%\3-prepare.txt"
-" Compile...;          ; End compile;          ;nmake -f ms\ntdll.mak;                                                                    ;STEP_4_COMPILE;   ;a;  ;%%%%OPENSSL_LOG_DIR%%%%\4-compile.txt"
-" Test...;             ; End test;             ;nmake -f ms\ntdll.mak test;                                                               ;STEP_5_TEST;      ;w;  ;%%%%OPENSSL_LOG_DIR%%%%\5-test.txt"
-" Install...;          ; End install;          ;nmake -f ms\ntdll.mak install;                                                            ;STEP_6_INSTALL;   ;w;  ;%%%%OPENSSL_LOG_DIR%%%%\6-install.txt"
-" Create include...;   ; End create include;   ;call :create_inc_lib_file;                                                                ;-;                ;a;  ;null"
-) do (
-    call :main_command %%a
-	if not !ERRORLEVEL! == 0 (
-		exit /b 1
-	)
-)
-exit /b 0
-
-:main_x64
-::%%a                   %%b                     %%c                                                                                         %%d              %%e  %%f
-for %%a in (
-" Copy files...;       ; End copy files;       ;xcopy %%%%OPENSSL_BASE_DIR%%%%\src %%%%OPENSSL_SRC_DIR%%%% /I /E;                          ;STEP_0_COPY;      ;w;  ;%%%%OPENSSL_LOG_DIR%%%%\0-copy_files.txt"
-" Test source dir...;  ; End test source dir;  ;call :check_src_dir;                                                                       ;-;                ;a;  ;nul"
-" Make install dir...; ; End make install dir; ;call :make_install_dir;                                                                    ;-;                ;a;  ;nul"
-" Configure...;        ; End configure;        ;perl Configure VC-WIN64A no-asm --prefix=%%%%OPENSSL_INSTALL_DIR%%%% enable-static-engine; ;STEP_1_CONFIGURE; ;w;  ;%%%%OPENSSL_LOG_DIR%%%%\1-configure.txt"
-" Assign numbers...;   ; End assign numbers;   ;perl util\mkdef.pl crypto ssl update;                                                      ;STEP_2_ASSIGN;    ;w;  ;%%%%OPENSSL_LOG_DIR%%%%\2-assign.txt"
-" Prepare...;          ; End prepare;          ;call ms\do_win64a;                                                                         ;STEP_3_PREPARE;   ;w;  ;%%%%OPENSSL_LOG_DIR%%%%\3-prepare.txt"
-" Compile...;          ; End compile;          ;nmake -f ms\ntdll.mak;                                                                     ;STEP_4_COMPILE;   ;a;  ;%%%%OPENSSL_LOG_DIR%%%%\4-compile.txt"
-" Test...;             ; End test;             ;nmake -f ms\ntdll.mak test;                                                                ;STEP_5_TEST;      ;w;  ;%%%%OPENSSL_LOG_DIR%%%%\5-test.txt"
-" Install...;          ; End install;          ;nmake -f ms\ntdll.mak install;                                                             ;STEP_6_INSTALL;   ;w;  ;%%%%OPENSSL_LOG_DIR%%%%\6-install.txt"
-" Create include...;   ; End create include;   ;call :create_inc_lib_file;                                                                 ;-;                ;a;  ;null"
-) do (
-    call :main_command %%a
-	if not !ERRORLEVEL! == 0 (
-		exit /b 1
-	)
-)
-exit /b 0
-
-:main_command
-::echo "%~1"
-for /f "delims=; tokens=1,3,5,7,9,11" %%a in ("%~1") do (
-    call :main_step "%%a" "%%b" "%%c" "%%d" "%%e" "%%f"
-    if not !ERRORLEVEL! == 0 (
-        exit /b 1
-    )
-)
-exit /b 0
-
 :main_step
 :: %%1 - begin log message
 :: %%2 - end log message
@@ -206,7 +176,30 @@ if not exist "%OPENSSL_BASE_DIR%\src\" (
    echo Error. Directory 'src' don't exists in path [%OPENSSL_BASE_DIR%].
    exit 1
 )
+for /F "delims=" %%a in ('echo %OPENSSL_BASE_DIR%^|findstr /RIC:%PATTERN_VERSION%') do (
+    set A=%%a
+)
+if "%A%" == "" (
+    echo Error. Unknown version 1.
+    exit 1
+)
 exit /b 0
+
+:get_openssl_version
+echo [%OPENSSL_BASE_DIR%]
+echo for /F "delims=" %%a in ('echo %OPENSSL_BASE_DIR%^|findstr /RIC:%PATTERN_10x%') do (
+for /F "delims=" %%a in ('echo %OPENSSL_BASE_DIR%^|findstr /RIC:%PATTERN_10x%') do (
+    set VERSION=10x
+    echo 111
+    exit /b 0
+)
+for /F "delims=" %%a in ('echo %OPENSSL_BASE_DIR%^|findstr /RIC:%PATTERN_11x%') do (
+    set VERSION=11x
+    echo 222
+    exit /b 0
+)
+echo Error. Unknown version 2.
+exit 1
 
 :get_openssl_name
 :: Получить имя OpenSSL папки из полного пути.
