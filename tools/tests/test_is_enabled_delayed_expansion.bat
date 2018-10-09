@@ -6,7 +6,7 @@ set FAILED=0
 setlocal
 
 call is_enabled_delayed_expansion.bat
-if %ERRORLEVEL% == 1 (
+if %ERRORLEVEL% == 0 (
     set MESSAGE=passed
 ) else (
     set MESSAGE=FAILED
