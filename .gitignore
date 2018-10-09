@@ -9,7 +9,6 @@ ehthumbs_vista.db
 
 *.txt
 *.bak
-test.bat
 
 # auto generated file
 set_openssl_inc_lib_*.bat
