@@ -37,7 +37,7 @@ if "%~1" == "--help" (
 ) else if "%~1" == "" (
     goto :main
 ) else (
-    echo Error. Unknown parameter [%~1].
+    echo Error. Unknown parameter {%~1}. [%~f0 :parse_arguments]
     exit 1
 )
 shift /1
@@ -57,7 +57,7 @@ set INPUT_DIR=
 
 call _sub tools\expand_path OPENSSL_NAME n %OPENSSL_BASE_DIR%
 if not %ERRORLEVEL% == 0 (
-    echo Error. Can't get openssl name from path. {%BASE_DIR%}. [%~f0 :main]
+    echo Error. Can't get openssl name from path. {%OPENSSL_BASE_DIR%}. [%~f0 :main]
     exit 1
 )
 
@@ -95,7 +95,7 @@ if "%DEBUG%" == "1" (
 
 
 if not exist "%OPENSSL_STEPS%" (
-    echo Error. Can't find steps file. [%OPENSSL_STEPS%]
+    echo Error. Can't find steps file. {%OPENSSL_STEPS%}. [%~f0 :main]
     exit 1
 )
 
