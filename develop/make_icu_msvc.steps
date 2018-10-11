@@ -1,0 +1,13 @@
+#
+#Команды для сборки ICU
+#
+#%%a                  %%b                    %%c                                                                         %%d               %%e %%f
+ Copy files...       ; End copy files       ;xcopy %ICU_BASE_DIR%\src %ICU_SRC_DIR% /I /E                              ;STEP_0_COPY      ;w  ;%ICU_LOG_DIR%\0-copy_files.txt
+ Test source dir...  ; End test source dir  ;call :check_src_dir                                                       ;-                ;s  ;nul
+ Make install dir... ; End make install dir ;call :make_install_dir                                                    ;-                ;s  ;nul
+ Begin dos2unix 1... ; End dos2unix 1...    ;dos2unix *                                                                ;STEP_1_DOS2UNIX  ;w  ;%ICU_LOG_DIR%\1-dos2unix.txt
+ Begin dos2unix 2... ; End dos2unix 2...    ;dos2unix -f configure                                                     ;STEP_2_DOS2UNIX  ;w  ;%ICU_LOG_DIR%\2-dos2unix.txt
+ Configue...         ; End configure        ;bash runConfigureICU Cygwin/MSVC -prefix=/cygdrive/%ICU_INSTALL_DIR_UNIX% ;STEP_3_CONFIGURE ;w  ;%ICU_LOG_DIR%\3-configure.txt
+ Compile...          ; End compile          ;make                                                                      ;STEP_4_COMPILE   ;a  ;%ICU_LOG_DIR%\4-compile.txt
+ Install...          ; End install          ;make install                                                              ;STEP_5_INSTALL   ;a  ;%ICU_LOG_DIR%\5-install.txt
+ Create include...   ; End create include   ;call :create_inc_lib_file                                                 ;-                ;s  ;nul
