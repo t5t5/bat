@@ -79,6 +79,42 @@ if "%VAR30_E%" == "%VAR30_N%" (
 )
 echo %MESSAGE%
 
+set TTT=""111" "222" 3 4"
+set MESSAGE=Expand: "~"
+call :native_expand_quot VAR35_N %TTT%
+call expand_path.bat VAR35_E "" %TTT%
+if "%VAR35_E%" == "%VAR35_N%" (
+    set MESSAGE=passed ... %MESSAGE%
+) else (
+    set MESSAGE=FAILED ... %MESSAGE%
+    set /a FAILED+=1
+)
+echo %MESSAGE% [%TTT%] =^> e:[%VAR35_E%] and n:[%VAR35_E%]
+
+set TTT=1111111111111111
+set MESSAGE=Expand: "~"
+call :native_expand_quot VAR40_N %TTT%
+call expand_path.bat VAR40_E "" %TTT%
+if "%VAR40_E%" == "%VAR40_N%" (
+    set MESSAGE=passed ... %MESSAGE%
+) else (
+    set MESSAGE=FAILED ... %MESSAGE%
+    set /a FAILED+=1
+)
+echo %MESSAGE% [%TTT%] =^> e:[%VAR40_E%] and n:[%VAR40_E%]
+
+set TTT="1111111111111111"
+set MESSAGE=Expand: "~"
+call :native_expand_quot VAR45_N %TTT%
+call expand_path.bat VAR45_E "" %TTT%
+if "%VAR45_E%" == "%VAR45_N%" (
+    set MESSAGE=passed ... %MESSAGE%
+) else (
+    set MESSAGE=FAILED ... %MESSAGE%
+    set /a FAILED+=1
+)
+echo %MESSAGE% [%TTT%] =^> e:[%VAR45_E%] and n:[%VAR45_E%]
+
 endlocal&exit /b %FAILED%
 
 :: ----------------------------
@@ -97,5 +133,9 @@ exit /b 0
 
 :native_expand_path
 set %1=%~$PATH:2
+exit /b 0
+
+:native_expand_quot
+set %1=%~2
 exit /b 0
 
