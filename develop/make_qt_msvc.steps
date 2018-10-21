@@ -1,0 +1,8 @@
+#
+#Команды для сборки Qt
+#
+#%%a                              %%b                        %%c                                                 %%d           %%e %%f
+ Start configuring...            ; End configuring          ;call %QT_DIR_SRC%\configure.bat %QT_BUILD_OPTIONS% ;STEP_CONF    ;w  ;%QT_LOG%__0_config.txt
+ Start compile...                ; End compile              ;jom                                                ;STEP_MAKE    ;a  ;%QT_LOG%__1_make_nmake.txt
+ Start install...                ; End install              ;jom install                                        ;STEP_INSTALL ;a  ;%QT_LOG%__2_make_install.txt
+ Start creating documentation... ; End create documentation ;jom docs                                           ;STEP_DOCS    ;a  ;%QT_LOG%__3_make_jom_docs.txt
