@@ -1,52 +1,22 @@
 @echo off
+setlocal enabledelayedexpansion
+
 :: Сборка Qt
+::
+:: %%1  - путь к каталогу Qt (версия)
+:: %%2  - путь для теневой сборки (platform)
 
-setlocal EnableDelayedExpansion
-
-set DEBUG=0
-set INPUT_PLATFORM=
-set INPUT_DIR=
-:parse_arguments
-if "%~1" == "--help" (
-    call :usage
-    exit 0
-) else if "%~1" == "-h" (
-    call :usage
-    exit 0
-) else if "%~1" == "--platform" (
-    set INPUT_PLATFORM=%~2
-    shift /1
-) else if "%~1" == "-p" (
-    set INPUT_PLATFORM=%~2
-    shift /1
-) else if "%~1" == "--dir" (
-    set INPUT_DIR=%~2
-    shift /1
-) else if "%~1" == "-d" (
-    set INPUT_DIR=%~2
-    shift /1
-) else if "%~1" == "--debug" (
-    set DEBUG=1
-) else if "%~1" == "" (
-    goto :main
-) else (
-    echo Error. Unknown parameter {%~1}. [%~f0 :parse_arguments]
-    exit 1
+if "%1" == "" (
+   echo Error: Path to Qt is empty.
+   exit 1
 )
-shift /1
-goto :parse_arguments
-
-:main
-call :parse_platform PLATFORM_NAME PLATFORM_CODE %INPUT_PLATFORM%
-call :parse_directory QT_BASE_DIR "%INPUT_DIR%"
-
-set INPUT_PLATFORM=
-set INPUT_DIR=
-
-call _sub tools\expand_path QT_BUILD_NAME n %QT_BASE_DIR%
-if not %ERRORLEVEL% == 0 (
-    echo Error. Can't get Qt name from path. {%QT_BASE_DIR%}. [%~f0 :main]
-    exit 1
+if "%2" == "" (
+   echo Error: Shadow name is empty.
+   exit 1
+)
+if not exist "%~f1\src\" (
+   echo Directory 'src' don't exists in path [%~f1].
+   exit 0
 )
 
 :: формат даты вида: yyyy-mm-dd
@@ -54,21 +24,21 @@ set CURDATE=%DATE:~6,4%-%DATE:~3,2%-%DATE:~0,2%
 set CURTIME=%TIME: =0%
 
 set PATH=C:\WINDOWS;C:\WINDOWS\system32
-set PATH=C:\Progs\bat;%PATH%
 call "%~dp0set_ruby.bat"
 call "%~dp0set_perl.bat"
 call "%~dp0set_python.bat"
 call "%~dp0set_jom.bat"
-call "%~dp0set_msvc.bat" %PLATFORM_NAME%
-call "%~dp0set_log.bat" "%QT_BASE_DIR%\%CURDATE%--%PLATFORM_CODE%-log.txt"
-call "%~dp0set_openssl_inc_lib.bat" -p %PLATFORM_NAME% -v 1.0.2
-call "%~dp0set_icu_inc_lib.bat" --platform %PLATFORM_NAME%
-call "%~dp0set_llvm.bat" %PLATFORM_NAME%
+call "%~dp0set_msvc.bat" x86
+call "%~dp0set_log.bat" "%~f1\%CURDATE%-log.txt"
+call "%~dp0set_openssl_inc_lib.bat"
+call "%~dp0set_llvm.bat"
 
-set QT_BUILD_NAME=msvc-2017
-set QT_SRC_DIR=%QT_BASE_BASE%\src
-set QT_BUILD_DIR=%QT_BASE_DIR%\%QT_BUILD_NAME%-%PLATFORM_CODE%
-set QT_LOG_DIR=%QT_BASE_DIR%\%QT_BUILD_NAME%-%PLATFORM_CODE%
+set QT_VERSION=%~1
+set QT_BUILD_NAME=%~2
+set QT_DIR_BASE=%~f1
+set QT_DIR_SRC=%QT_DIR_BASE%\src
+set QT_DIR_BUILD=%QT_DIR_BASE%\%QT_BUILD_NAME%
+set QT_LOG=%QT_DIR_BASE%\%CURDATE%
 
 :: Examples
 ::QT_BUILD_NAME=msvc-2017
@@ -79,9 +49,9 @@ set QT_LOG_DIR=%QT_BASE_DIR%\%QT_BUILD_NAME%-%PLATFORM_CODE%
 ::CURDATE=2018-07-01
 ::CURTIME=02:20:03,45
 
-set PATH=%QT_SRC_DIR%\gnuwin32\bin;%QT_BUILD_DIR%\qtbase\bin;%PATH%
+set PATH=%QT_DIR_SRC%\gnuwin32\bin;%QT_DIR_BUILD%\qtbase\bin;%PATH%
 
-set step=%QT_BASE_DIR%\_step.bat
+set step=%QT_DIR_BASE%\_step.bat
 
 :: QMAKESPEC
 :: QTDIR
@@ -108,9 +78,8 @@ set QT_BUILD_OPTIONS=^
 -mp
 ::-c++std c++11
 
-set >%QT_LOG_DIR%__set.txt
+set >%QT_LOG%__set.txt
 
-exit
 ::exit 0
 :: ------------------------------------------------------------------------------------------------
 :: Build
@@ -271,76 +240,3 @@ if not %ERRORLEVEL% == 0 (
 
 call :end_log_ok
 exit /b 0
-
-:: ------------------------------------------------------------------------------------------------
-:usage
-echo Usage: %~nx0 [options]
-echo Options:
-echo   --help or -h               - this screen
-echo   --platform arc or -p arc   - arc - platform (x86 or x64)
-echo   --dir path or -d path      - path - base directory with Qt
-echo   --debug                    - debug info about build
-exit /b 0
-
-
-:parse_platform 
-:: Разбор аргумента командной строки "platform"
-::
-:: %%1 - имя переменной для установки PLATFORM_NAME;
-:: %%2 - имя переменной для установик PLATFORM_NAME;
-:: %%3 - значение аргумента "platform" для разбора.
-setlocal EnableDelayedExpansion
-call _sub.bat develop\parse_platform.bat _PLATFORM_NAME _PLATFORM_CODE ERROR_TEXT %3
-if not %ERRORLEVEL% == 0 (
-    echo Error. %ERROR_TEXT% [%~f0]
-    exit 1
-)
-endlocal&set %1=%_PLATFORM_NAME%&set %2=%_PLATFORM_CODE%
-exit /b 0
-
-
-:parse_directory
-:: Разбор пути, где будет сборка.
-::
-:: %%1 - имя переменной для установки пути сборки;
-:: %%2 - путь для разбора;
-setlocal EnableDelayedExpansion
-set INPUT_DIR=%CD%
-if not "%~1" == "" (
-    set INPUT_DIR=%~f2
-)
-if not exist "%INPUT_DIR%\" (
-    echo Error. Base directory not found {%INPUT_DIR%}. [%~f0 :parse_directory]
-    exit 1
-)
-if not exist "%INPUT_DIR%\src\" (
-    echo Error. Directory 'src' don't exists in path {%INPUT_DIR%}. [%~f0 :parse_directory]
-    exit 1
-)
-endlocal&set %1=%INPUT_DIR%
-exit /b 0
-
-
-:load_steps
-:: Загрузка файла с шагами сборки. Чтоб можно было пропустить шаг.
-::
-:: %%1 - имя файла с шагами сборки.
-if exist "%~1" (
-    for /f "delims== tokens=1,2" %%a in (%~1) do ( set %%a=%%b )
-) else (
-    call :save_steps "%~1"
-)
-exit /b 0
-
-
-:save_steps
-:: Записать файл с шагами сборки.
-::
-:: %%1 - имя файла с шагами сборки.
-if not exist "%~dp1" (
-    mkdir "%~dp1" >nul 2>&1
-)
-set STEP_>"%~1" 2>nul
-exit /b 0
-
-
