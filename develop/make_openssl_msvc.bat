@@ -57,7 +57,7 @@ set INPUT_DIR=
 
 call _sub tools\expand_path OPENSSL_NAME n %OPENSSL_BASE_DIR%
 if not %ERRORLEVEL% == 0 (
-    echo Error. Can't get openssl name from path. {%OPENSSL_BASE_DIR%}. [%~f0 :main]
+    echo Error. Can't get openssl name from path {%OPENSSL_BASE_DIR%}. [%~f0 :main]
     exit 1
 )
 
@@ -65,6 +65,7 @@ if not %ERRORLEVEL% == 0 (
 set CURDATE=%DATE:~6,4%-%DATE:~3,2%-%DATE:~0,2%
 set CURTIME=%TIME: =0%
 
+call "%~dp0set_temp.bat"
 call "%~dp0set_msvc.bat" %PLATFORM_NAME%
 call "%~dp0set_perl.bat"
 call "%~dp0set_jom.bat"
@@ -156,6 +157,7 @@ echo Options:
 echo   --help or -h               - this screen
 echo   --platform arc or -p arc   - arc - platform (x86 or x64)
 echo   --dir path or -d path      - path - base directory with openssl
+echo   --version vers or -v vers  - version OpenSSL
 echo   --debug                    - debug info about build
 exit /b 0
 
@@ -164,12 +166,12 @@ exit /b 0
 :: Разбор аргумента командной строки "platform"
 ::
 :: %%1 - имя переменной для установки PLATFORM_NAME;
-:: %%2 - имя переменной для установик PLATFORM_NAME;
+:: %%2 - имя переменной для установик PLATFORM_CODE;
 :: %%3 - значение аргумента "platform" для разбора.
 setlocal EnableDelayedExpansion
 call _sub.bat develop\parse_platform.bat _PLATFORM_NAME _PLATFORM_CODE ERROR_TEXT %3
 if not %ERRORLEVEL% == 0 (
-    echo Error. %ERROR_TEXT% [%~f0]
+    echo Error. %ERROR_TEXT% [%~f0 :parse_platform]
     exit 1
 )
 endlocal&set %1=%_PLATFORM_NAME%&set %2=%_PLATFORM_CODE%
