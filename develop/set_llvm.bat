@@ -50,8 +50,8 @@ exit /b 1
 
 :end
 endlocal&set LLVM_INSTALL_DIR=%P%
-
 call :remove_quot %LLVM_INSTALL_DIR%
+set Path=%LLVM_INSTALL_DIR%\bin;%Path%
 exit /b 0
 
 :remove_quot
