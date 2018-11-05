@@ -53,6 +53,7 @@ if not %ERRORLEVEL% == 0 (
 set CURDATE=%DATE:~6,4%-%DATE:~3,2%-%DATE:~0,2%
 set CURTIME=%TIME: =0%
 
+call "%~dp0set_temp.bat"
 call "%~dp0set_cygwin.bat"
 call "%~dp0set_msvc.bat" %PLATFORM_NAME%
 call "%~dp0set_log.bat" "%ICU_BASE_DIR%\%CURDATE%--%PLATFORM_CODE%-log.txt"
@@ -145,7 +146,7 @@ echo Usage: %~nx0 [options]
 echo Options:
 echo   --help or -h               - this screen
 echo   --platform arc or -p arc   - arc - platform (x86 or x64)
-echo   --dir path or -d path      - path - base directory with openssl
+echo   --dir path or -d path      - path - base directory with ICU
 echo   --debug                    - debug info about build
 exit /b 0
 
