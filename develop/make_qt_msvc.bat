@@ -43,52 +43,37 @@ call :parse_directory QT_BASE_DIR "%INPUT_DIR%"
 set INPUT_PLATFORM=
 set INPUT_DIR=
 
-call _sub tools\expand_path QT_BUILD_NAME n %QT_BASE_DIR%
-if not %ERRORLEVEL% == 0 (
-    echo Error. Can't get Qt name from path. {%QT_BASE_DIR%}. [%~f0 :main]
-    exit 1
-)
-
 :: формат даты вида: yyyy-mm-dd
 set CURDATE=%DATE:~6,4%-%DATE:~3,2%-%DATE:~0,2%
 set CURTIME=%TIME: =0%
 
+set QT_BUILD_NAME=msvc-2017
+set QT_SRC_DIR=%QT_BASE_DIR%\src
+set QT_BUILD_DIR=%QT_BASE_DIR%\%QT_BUILD_NAME%-%PLATFORM_CODE%
+set QT_LOG_DIR=%QT_BASE_DIR%\%QT_BUILD_NAME%-%PLATFORM_CODE%-files
+set QT_STEP_FILE=%QT_LOG_DIR%\make_step.txt
+set QT_STEPS=%~dpn0.steps
+
+call :create_dir "%QT_LOG_DIR%"
+
 set PATH=C:\WINDOWS;C:\WINDOWS\system32
 set PATH=C:\Progs\bat;%PATH%
+call "%~dp0set_temp.bat"
 call "%~dp0set_ruby.bat"
 call "%~dp0set_perl.bat"
-call "%~dp0set_python.bat"
+call "%~dp0set_python.bat" -v 2 -p %PLATFORM_NAME%
 call "%~dp0set_jom.bat"
 call "%~dp0set_msvc.bat" %PLATFORM_NAME%
-call "%~dp0set_log.bat" "%QT_BASE_DIR%\%CURDATE%--%PLATFORM_CODE%-log.txt"
+call "%~dp0set_log.bat" "%QT_LOG_DIR%\log.txt"
 call "%~dp0set_openssl_inc_lib.bat" -p %PLATFORM_NAME% -v 1.0.2
 call "%~dp0set_icu_inc_lib.bat" --platform %PLATFORM_NAME%
 call "%~dp0set_llvm.bat" %PLATFORM_NAME%
 
-set QT_BUILD_NAME=msvc-2017
-set QT_SRC_DIR=%QT_BASE_BASE%\src
-set QT_BUILD_DIR=%QT_BASE_DIR%\%QT_BUILD_NAME%-%PLATFORM_CODE%
-set QT_LOG_DIR=%QT_BASE_DIR%\%QT_BUILD_NAME%-%PLATFORM_CODE%
-
-:: Examples
-::QT_BUILD_NAME=msvc-2017
-::QT_DIR_BASE=C:\Qt\5.10.1
-::QT_DIR_BUILD=C:\Qt\5.10.1\msvc-2017
-::QT_DIR_SRC=C:\Qt\5.10.1\src
-::QT_VERSION=5.10.1
-::CURDATE=2018-07-01
-::CURTIME=02:20:03,45
-
 set PATH=%QT_SRC_DIR%\gnuwin32\bin;%QT_BUILD_DIR%\qtbase\bin;%PATH%
-
-set step=%QT_BASE_DIR%\_step.bat
-
-:: QMAKESPEC
-:: QTDIR
 
 set QT_BUILD_OPTIONS=^
 -platform win32-msvc ^
--prefix ^"%QT_DIR_BUILD%\qtbase^" ^
+-prefix ^"%QT_BUILD_DIR%\qtbase^" ^
 -debug-and-release ^
 -opensource ^
 -confirm-license ^
@@ -101,176 +86,75 @@ set QT_BUILD_OPTIONS=^
 -qt-libjpeg ^
 -qt-freetype ^
 -openssl-runtime ^
--nomake examples ^
--nomake tests ^
 -plugin-manifests ^
 -shared ^
 -mp
+
 ::-c++std c++11
+::-nomake examples
+::-nomake tests
 
-set >%QT_LOG_DIR%__set.txt
+set >%QT_LOG_DIR%\set.txt
 
-exit
-::exit 0
-:: ------------------------------------------------------------------------------------------------
-:: Build
-goto start_build
+:: exit
 
-exit 0
-:: ------------------------------------------------------------------------------------------------
-:step_conf
-%log% " Start configuring..."
-%log% " Options: %QT_BUILD_OPTIONS%"
-call %QT_DIR_SRC%\configure.bat %QT_BUILD_OPTIONS%>"%QT_LOG%__00_config.txt" 2>&1
-%log% " ErrorLevel=[%ERRORLEVEL%]"
-%log% " End configuring"
-exit /b %ERRORLEVEL%
-
-:: ------------------------------------------------------------------------------------------------
-:step_make
-%log% " Start compile..."
-jom>>"%QT_LOG%__01_make_nmake.txt" 2>&1
-%log% " ErrorLevel=[%ERRORLEVEL%]"
-%log% " End compile"
-exit /b %ERRORLEVEL%
-
-:: ------------------------------------------------------------------------------------------------
-:step_install
-%log% " Start install..."
-jom install>>"%QT_LOG%__02_make_install.txt" 2>&1
-%log% " ErrorLevel=[%ERRORLEVEL%]"
-%log% " End install"
-exit /b %ERRORLEVEL%
-
-:: ------------------------------------------------------------------------------------------------
-:step_docs
-%log% " Start creating documentation..."
-jom docs>>"%QT_LOG%__03_make_jom_docs.txt" 2>&1
-%log% " ErrorLevel=[%ERRORLEVEL%]"
-%log% " End create documentation"
-exit /b %ERRORLEVEL%
-
-:: ------------------------------------------------------------------------------------------------
-:step_mkdir
-if not exist "%QT_DIR_BUILD%" (
-    %log% " [%QT_DIR_BUILD%] not found. Try create..."
-    mkdir "%QT_DIR_BUILD%" >nul 2>&1
-    if exist "%QT_DIR_BUILD%" %log% " [%QT_DIR_BUILD%] created successfully."
+if not exist "%QT_STEPS%" (
+    echo Error. Can't find steps file. {%QT_STEPS%}. [%~f0 :main]
+    exit 1
 )
-if not exist "%QT_DIR_BUILD%" (
-    %log% " [%QT_DIR_BUILD%] not created. ERROR!!!"
-    exit /b 1
-)
-cd /D %QT_DIR_BUILD%
-exit /b 0
-
-
-:: ------------------------------------------------------------------------------------------------
-:begin_log
-%log% "Start build Qt %QT_VERSION%"
-exit /b 0
-
-:end_log_ok
-%log% "End build Qt"
-exit /b 0
-
-:end_log_error
-%log% "End build Qt with error!"
-exit /b 0
-
-:save_steps
-echo set STEP_CONF=%STEP_CONF% >%step%
-echo set STEP_MAKE=%STEP_MAKE% >>%step%
-echo set STEP_INSTALL=%STEP_INSTALL% >>%step%
-echo set STEP_DOCS=%STEP_DOCS% >>%step%
-exit /b 0
-
-:load_steps
-if exist %step% (
-    call %step%
-) else (
-    set STEP_CONF=1
-    set STEP_MAKE=1
-    set STEP_INSTALL=1
-    set STEP_DOCS=1
-    call :save_steps
-)
-exit /b 0
-
-:start_build
-call :load_steps
-::if "%1" == "conf" (
-::    set STEP_CONF=1
-::    set STEP_MAKE=0
-::    set STEP_DOCS=0
-::) else if "%1" == "make" (
-::    set STEP_CONF=0
-::    set STEP_MAKE=1
-::    set STEP_DOCS=0
-::) else if "%1" == "docs" (
-::    set STEP_CONF=0
-::    set STEP_MAKE=0
-::    set STEP_DOCS=1
-::)
-::if not exist %QT_DIR_BUILD%\Makefile (
-::    set STEP_CONF=1
-::)
-
+call :load_steps %QT_STEP_FILE%
 call :begin_log
-call :step_mkdir
-if not %ERRORLEVEL% == 0 (
-    call :end_log_error
-    exit /b %ERRORLEVEL%
-)
 
-if not %STEP_CONF% == 1 goto skip_conf
-call :step_conf
-if not %ERRORLEVEL% == 0 (
-    call :end_log_error
-    exit /b 1
-) else (
-    set STEP_CONF=0
-    call :save_steps
+for /F "eol=# tokens=1,2,3,4,5,6 delims=;" %%a in (%QT_STEPS%) do (
+    call _sub.bat tools\trim_right.bat __A "%%a"
+    call _sub.bat tools\trim_right.bat __B "%%b"
+    call _sub.bat tools\trim_right.bat __C "%%c"
+    call _sub.bat tools\trim_right.bat __D "%%d"
+    call _sub.bat tools\trim_right.bat __E "%%e"
+    call _sub.bat tools\trim_right.bat __F "%%f"
+    call :process_step "!__A!" "!__B!" "!__C!" "!__D!" "!__E!" "!__F!"
+    if not !ERRORLEVEL! == 0 ( goto :end )
 )
-:skip_conf
+:end
 
-if not %STEP_MAKE% == 1 goto skip_make
-call :step_make
-if not %ERRORLEVEL% == 0 (
-    call :end_log_error
-    exit /b 1
-) else (
-    set STEP_MAKE=0
-    call :save_steps
-)
-:skip_make
-
-::goto :skip_install
-if not %STEP_INSTALL% == 1 goto skip_install
-call :step_install
-if not %ERRORLEVEL% == 0 (
-    call :end_log_error
-    exit /b 1
-) else (
-    set STEP_INSTALL=0
-    call :save_steps
-)
-:skip_install
-
-::goto :skip_docs
-if not %STEP_DOCS% == 1 goto skip_docs
-call :step_docs
-if not %ERRORLEVEL% == 0 (
-    call :end_log_error
-    exit /b 1
-) else (
-    set STEP_DOCS=0
-    call :save_steps
-)
-:skip_docs
-
-call :end_log_ok
+call :end_log "%ERRORLEVEL%"
 exit /b 0
+
+:: ------------------------------------------------------------------------------------------------
+:process_step
+:: Обработка шага сборки
+::
+:: %%1 - begin log message;
+:: %%2 - end log message;
+:: %%3 - command;
+:: %%4 - STEP;
+:: %%5 - w - rewrite log, a - append log;
+:: %%6 - log file
+:: echo [%~1] - [%~2] - [%~3] - [%~4] - [%~5] - [%~6]
+if not "%~4" == "-" (
+    call :variable__get_value_by_name %~4 1
+    if !ERRORLEVEL! == 0 ( exit /b 0 )
+)
+%log% "%~1"
+%log% " Cmd: [%~3]"
+if "%~5" == "a" (
+    %~3 >>%~6 2>&1
+) else if "%~5" == "w" (
+    %~3 >%~6 2>&1
+) else if "%~5" == "s" (
+    %~3
+)
+%log% " ErrorLevel=[%ERRORLEVEL%]"
+%log% "%~2"
+if not %ERRORLEVEL% == 0 (
+    exit /b 1
+)
+if not "%~4" == "-" (
+    set %~4=0
+    call :save_steps "%QT_STEP_FILE%"
+)
+exit /b 0
+
 
 :: ------------------------------------------------------------------------------------------------
 :usage
@@ -343,4 +227,80 @@ if not exist "%~dp1" (
 set STEP_>"%~1" 2>nul
 exit /b 0
 
+
+:create_dir
+:: Проверить наличие папки, и создать в случае необходимости.
+::
+:: %%1 - путь папки.
+if not exist "%~1" (
+    mkdir "%~1" >nul 2>&1
+)
+if not exist "%~1" (
+    echo Error. Can't create directory {%~1}. [%~f0 :create_dir]
+    exit 1
+)
+exit /b 0
+
+:create_dir_log
+:: Проверить наличие папки, и создать в случае необходимости.
+::
+:: %%1 - папки папки.
+if not exist "%~1" (
+    %log% " [%~1] not found. Try create..."
+    mkdir "%~1" >nul 2>&1
+    if exist "%~1" %log% " [%~1] created successfully."
+)
+if not exist "%~1" (
+    %log% " [%~1] not created. ERROR!!!"
+    exit /b 1
+)
+exit /b 0
+
+
+:begin_log
+:: Начать логирование.
+%log% "Start build Qt %QT_VERSION% [%PLATFORM_CODE%]"
+exit /b 0
+
+
+:end_log
+:: Закончить логирование.
+::
+:: %%1 == 0 - ошибок не было;
+:: %%1 != 0 - были ошибки.
+if "%~1" == "0" (
+    %log% "End build Qt"
+) else (
+    %log% "End build Qt with error!"
+)
+exit /b 0
+
+
+:variable__get_value_by_name
+:: Получить числовое значение переменной по имени.
+::
+:: %%1 - Имя переменной;
+:: %%2 - Значение по умолчанию, если переменная не найдена или пустая.
+::
+:: Выход:
+:: ERRORLEVEL == %%2 - если переменная не найдена или пустая;
+:: ERRORLEVEL        - значение переменной с именем %%1
+call :variable__is_empty %%%1%%
+if %ERRORLEVEL% == 1 ( exit /b %2 )
+for /f "delims== tokens=2" %%a in ('set %1') do (exit /b %%a)
+echo Error. Reached unreachable! [%~f0 :variable__get_value_by_name]
+exit 1
+
+
+:variable__is_empty
+:: Проверить значени на пустоту.
+::
+:: %%1 - значение для проверки.
+::
+:: Выход:
+:: ERRORLEVEL == 1 - значение отсутствует;
+:: ERRORLEVEL == 0 - значение присутствует.
+if "%1" == "" (exit /b 1) else (exit /b 0)
+echo Error. Reached unreachable! [%~f0 :variable__is_empty]
+exit 1
 
