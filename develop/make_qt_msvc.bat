@@ -65,7 +65,7 @@ call "%~dp0set_python.bat" -v 2 -p %PLATFORM_NAME%
 call "%~dp0set_jom.bat"
 call "%~dp0set_msvc.bat" %PLATFORM_NAME%
 call "%~dp0set_log.bat" "%QT_LOG_DIR%\log.txt"
-call "%~dp0set_openssl_inc_lib.bat" -p %PLATFORM_NAME% -v 1.0.2
+call "%~dp0set_openssl_inc_lib.bat" -p %PLATFORM_NAME% -v 1.1.1
 call "%~dp0set_icu_inc_lib.bat" --platform %PLATFORM_NAME%
 call "%~dp0set_llvm.bat" %PLATFORM_NAME%
 
@@ -87,12 +87,13 @@ set QT_BUILD_OPTIONS=^
 -qt-freetype ^
 -openssl-runtime ^
 -plugin-manifests ^
+-skip qtwebengine ^
+-nomake examples ^
+-nomake tests ^
 -shared ^
 -mp
 
 ::-c++std c++11
-::-nomake examples
-::-nomake tests
 
 set >%QT_LOG_DIR%\set.txt
 
