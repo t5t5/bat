@@ -1,0 +1,8 @@
+#
+# name     ; type    ; value                       ;
+--platform ;set      ;INPUT_PLATFORM               ;
+-p         ;set      ;INPUT_PLATFORM               ;
+--dir      ;set      ;INPUT_DIR                    ;
+-d         ;set      ;INPUT_DIR                    ;
+--help     ;callback ;call "%SENDER_BAT%" -m usage ;
+-h         ;callback ;call "%SENDER_BAT%" -m usage ;
