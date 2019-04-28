@@ -19,9 +19,9 @@ for /f "eol=# tokens=1,2,3 delims=;" %%a in (%~2) do (
     call :trim_left_char OPTION_NAME - "!OPTION_NAME!"
     :: echo [!OPTION_NAME!]--[!OPTION_TYPE!]--[!OPTION_VALUE!]
     if "!OPTION_TYPE!" == "set" (
-        set OPTION_ACTION_!OPTION_NAME!=!OPTION_VALUE!
+        set OPTION_ACTION_!OPTION_NAME!=!OPTION_TYPE!;!OPTION_VALUE!
     ) else if "!OPTION_TYPE!" == "callback" (
-        set OPTION_ACTION_!OPTION_NAME!=!OPTION_VALUE!
+        set OPTION_ACTION_!OPTION_NAME!=!OPTION_TYPE!;!OPTION_VALUE!
     ) else (
         echo Error. Unknown option type {!OPTION_TYPE!} [%~f0]
         exit 1
@@ -40,11 +40,21 @@ if "%ACTION%" == "-NF-" (
     echo Error.
     exit 1
 )
-set %ACTION%=%~4
+echo ---------------------------
+echo [%ACTION%]
+for /f "tokens=1,* delims=;" %%a in ("%ACTION%") do (
+    echo :: %%a -- %%b
+    if "%%a" == "callback" (
+        %%b
+    ) else if "%%a" == "set" (
+        set %%b=%~4
+    )
+)
+echo ---------------------------
 set
 
 endlocal
-exit 1
+exit /b 0
 
 :trim_left_char
 :: %%1  - имя переменной для установки значения;
