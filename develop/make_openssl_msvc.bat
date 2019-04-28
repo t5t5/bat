@@ -67,6 +67,7 @@ set CURTIME=%TIME: =0%
 
 call "%~dp0set_temp.bat"
 call "%~dp0set_msvc.bat" %PLATFORM_NAME%
+call "%~dp0set_llvm.bat" %PLATFORM_NAME%
 call "%~dp0set_perl.bat"
 call "%~dp0set_jom.bat"
 call "%~dp0set_log.bat" "%OPENSSL_BASE_DIR%\%CURDATE%--%PLATFORM_CODE%-log.txt"
