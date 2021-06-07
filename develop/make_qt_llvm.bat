@@ -47,7 +47,7 @@ set INPUT_DIR=
 set CURDATE=%DATE:~6,4%-%DATE:~3,2%-%DATE:~0,2%
 set CURTIME=%TIME: =0%
 
-set QT_BUILD_NAME=llvm-800
+set QT_BUILD_NAME=llvm-1100
 set QT_SRC_DIR=%QT_BASE_DIR%\src
 set QT_BUILD_DIR=%QT_BASE_DIR%\%QT_BUILD_NAME%-%PLATFORM_CODE%
 set QT_LOG_DIR=%QT_BASE_DIR%\%QT_BUILD_NAME%-%PLATFORM_CODE%-files
@@ -89,6 +89,7 @@ set QT_BUILD_OPTIONS=^
 -openssl-runtime ^
 -plugin-manifests ^
 -skip qtwebengine ^
+-skip qtconnectivity ^
 -nomake examples ^
 -nomake tests ^
 -shared ^
