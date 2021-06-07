@@ -24,6 +24,8 @@ if "%1" == "" (
     set TASK=files
 ) else if "%1" == "dirs" (
     set TASK=dirs
+) else if "%1" == "commands" (
+    set TASK=commands
 ) else (
     echo Error: Unknown command [%1].
     exit 1
@@ -225,6 +227,19 @@ for /d %%i in (%DIR_MASK%) do (
 )
 call :wait4ready 1
 exit 0
+
+:: ------task commands ----------------------------------
+:do_commands
+:: In: %%1             - file_bat
+::     %%2...          - parameters for bat
+::     %%DIR_MASK%%    - dir mask
+::     %%THREADS%%     - threads count >= 1
+::     %%TASKID%%      - taskid = 1 or 0
+::echo DIR_MASK=%DIR_MASK%
+::echo THREADS =%THREADS%
+::echo TASKID  =%TASKID%
+::echo FILE_BAT=%FILE_BAT%
+
 
 :: ------------------------------------------------------
 
